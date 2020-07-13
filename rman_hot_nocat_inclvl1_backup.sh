@@ -26,7 +26,7 @@ export LOG_FILE=${LOG_DIR}/rman_incr_${ORACLE_SID}_`date +%d-%b-%y-%H-%M-%S`.log
 export PATH=$PATH:$ORACLE_HOME/bin;
 export DBTAG=INCRBACKUP`date +%d%b%Y`;
 v_begin_time_sec=`date +%s`;
-
+export MAIL_TO='itds-ops-corporate@westernsydney.edu.au';
 
 verify_log_dir () {
 if [ ! -d "$LOG_DIR" ]; then
@@ -43,12 +43,12 @@ show all;
 set echo on
 run
     {
-     allocate channel c1 device type disk;
+     allocate channel c1 device type disk; 
      allocate channel c2 device type disk;
      allocate channel c3 device type disk;
      allocate channel c4 device type disk;
      BACKUP INCREMENTAL LEVEL 1 tag $DBTAG AS COMPRESSED BACKUPSET DATABASE plus archivelog;
-         backup spfile tag $DBTAG;
+         backup spfile tag $DBTAG; 
          backup current controlfile tag $DBTAG;
          release channel c1;
          release channel c2;
@@ -58,8 +58,16 @@ run
 eofi
 }
 
+notify_errors () {
+if  grep -q ORA- ${LOG_FILE} 
+then
+mailx -s "RMAN Backup errors for database ${ORACLE_SID} on Host `hostname -f`, Pls verify the log file" ${MAIL_TO} < ${LOG_FILE}
+fi
+}
+
 verify_log_dir
 rman_hot_backup_use_db_recovery_file_dest
+notify_errors
 
 v_end_time_sec=`date +%s`;
 v_total_exec_time=`expr ${v_end_time_sec} - ${v_begin_time_sec}`;
