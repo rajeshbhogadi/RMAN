@@ -1,0 +1,12 @@
+DUPLICATE DATABASE TO cdb2
+  FROM ACTIVE DATABASE
+  USING COMPRESSED BACKUPSET
+  SPFILE
+    parameter_value_convert ('cdb1','cdb2')
+    set db_file_name_convert='/u01/app/oracle/oradata/cdb1/','/u01/app/oracle/oradata/cdb2/'
+    set log_file_name_convert='/u01/app/oracle/oradata/cdb1/','/u01/app/oracle/oradata/cdb2/'
+    set audit_file_dest='/u01/app/oracle/admin/cdb2/adump'
+    set core_dump_dest='/u01/app/oracle/admin/cdb2/cdump'
+    set control_files='/u01/app/oracle/oradata/cdb2/control01.ctl','/u01/app/oracle/oradata/cdb2/control02.ctl','/u01/app/oracle/oradata/cdb2/control03.ctl'
+    set db_name='cdb2'
+  NOFILENAMECHECK;
