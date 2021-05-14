@@ -1,0 +1,141 @@
+************* Set environment
+
+ORACLE_BASE=/opt/app/oracle
+ORACLE_HOME=/opt/app/oracle/product/11.2.0/dbhome_1
+ORACLE_SID=TEST112
+
+************* Get DBID details from the backup logs
+
+************* Ensure the directories where the datafiles and controlfiles will be restored to..exist on the filesystem
+=============================================================================================
+
+rman target / nocatalog|tee -a ./restore_test112.log
+
+SET DBID xxxxx
+RMAN> startup force nomount;
+
+startup failed: ORA-01078: failure in processing system parameters
+LRM-00109: could not open parameter file '/opt/app/oracle/product/11.2.0/dbhome_1/dbs/initTEST112.ora'
+
+starting Oracle instance without parameter file for retrieval of spfile
+Oracle instance started
+
+Total System Global Area    1069252608 bytes
+
+Fixed Size                     2188408 bytes
+Variable Size                285219720 bytes
+Database Buffers             775946240 bytes
+Redo Buffers                   5898240 bytes
+
+
+RMAN> restore spfile from '/opt/app/software/backups/spfile_0dvur8ik_1_1';
+
+Starting restore at 14-MAY-2021 15:28:09
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=126 device type=DISK
+
+channel ORA_DISK_1: restoring spfile from AUTOBACKUP /opt/app/software/backups/spfile_0dvur8ik_1_1
+channel ORA_DISK_1: SPFILE restore from AUTOBACKUP complete
+Finished restore at 14-MAY-2021 15:28:10
+
+RMAN> shutdown immediate;
+
+Oracle instance shut down
+
+RMAN> startup nomount;
+
+connected to target database (not started)
+Oracle instance started
+
+Total System Global Area    6265225216 bytes
+
+Fixed Size                     2193176 bytes
+Variable Size               1174407400 bytes
+Database Buffers            5083496448 bytes
+Redo Buffers                   5128192 bytes
+
+RMAN> restore controlfile from '/opt/app/software/backups/control_0evur8il_1_1';
+
+Starting restore at 14-MAY-2021 15:34:19
+using channel ORA_DISK_1
+
+channel ORA_DISK_1: restoring control file
+channel ORA_DISK_1: restore complete, elapsed time: 00:00:01
+output file name=/opt/app/oracle/oradata/TEST112/control01.ctl
+output file name=/opt/app/oracle/fast_recovery_area/TEST112/control02.ctl
+Finished restore at 14-MAY-2021 15:34:20
+
+
+RMAN> alter database mount;
+
+database mounted
+released channel: ORA_DISK_1
+
+RMAN> run {
+2> allocate channel c1 device type disk;
+3> allocate channel c2  device type disk;
+4> restore database;
+5> }
+
+allocated channel: c1
+channel c1: SID=156 device type=DISK
+
+allocated channel: c2
+channel c2: SID=189 device type=DISK
+
+Starting restore at 14-MAY-2021 15:36:02
+Starting implicit crosscheck backup at 14-MAY-2021 15:36:02
+Crosschecked 5 objects
+Crosschecked 4 objects
+Finished implicit crosscheck backup at 14-MAY-2021 15:36:02
+
+Starting implicit crosscheck copy at 14-MAY-2021 15:36:02
+Finished implicit crosscheck copy at 14-MAY-2021 15:36:02
+
+searching for all files in the recovery area
+cataloging files...
+no files cataloged
+
+
+channel c1: starting datafile backup set restore
+channel c1: specifying datafile(s) to restore from backup set
+channel c1: restoring datafile 00003 to /opt/app/oracle/oradata/TEST112/undotbs01.dbf
+channel c1: reading from backup piece /opt/app/software/backups/database_09vur8hp_1_1
+channel c2: starting datafile backup set restore
+channel c2: specifying datafile(s) to restore from backup set
+channel c2: restoring datafile 00004 to /opt/app/oracle/oradata/TEST112/users01.dbf
+channel c2: reading from backup piece /opt/app/software/backups/database_0bvur8hq_1_1
+channel c2: piece handle=/opt/app/software/backups/database_0bvur8hq_1_1 tag=FULLBACKUP14MAY2021
+channel c2: restored backup piece 1
+channel c2: restore complete, elapsed time: 00:00:01
+channel c2: starting datafile backup set restore
+channel c2: specifying datafile(s) to restore from backup set
+channel c2: restoring datafile 00002 to /opt/app/oracle/oradata/TEST112/sysaux01.dbf
+channel c2: reading from backup piece /opt/app/software/backups/database_08vur8hp_1_1
+channel c1: piece handle=/opt/app/software/backups/database_09vur8hp_1_1 tag=FULLBACKUP14MAY2021
+channel c1: restored backup piece 1
+channel c1: restore complete, elapsed time: 00:00:03
+channel c1: starting datafile backup set restore
+channel c1: specifying datafile(s) to restore from backup set
+channel c1: restoring datafile 00001 to /opt/app/oracle/oradata/TEST112/system01.dbf
+channel c1: reading from backup piece /opt/app/software/backups/database_07vur8hp_1_1
+channel c2: piece handle=/opt/app/software/backups/database_08vur8hp_1_1 tag=FULLBACKUP14MAY2021
+channel c2: restored backup piece 1
+channel c2: restore complete, elapsed time: 00:00:17
+channel c1: piece handle=/opt/app/software/backups/database_07vur8hp_1_1 tag=FULLBACKUP14MAY2021
+channel c1: restored backup piece 1
+channel c1: restore complete, elapsed time: 00:00:35
+Finished restore at 14-MAY-2021 15:36:40
+released channel: c1
+released channel: c2
+
+RMAN> ALTER DATABASE OPEN RESETLOGS;
+
+database opened
+
+RMAN> exit
+
+
+Recovery Manager complete.
+
+
